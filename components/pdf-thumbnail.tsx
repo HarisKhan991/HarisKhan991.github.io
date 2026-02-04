@@ -31,10 +31,10 @@ export function PDFThumbnail({ documentId, fileUrl, className = "", onThumbnailG
       const arrayBuffer = await response.arrayBuffer();
       
       // Import PDF.js dynamically
-      const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
+      const pdfjsLib = await import('pdfjs-dist');
       
       // Set worker
-      pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js';
       
       console.log(`[PDF] Loading PDF document...`);
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;

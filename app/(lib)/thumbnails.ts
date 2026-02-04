@@ -1,8 +1,8 @@
 // app/(lib)/thumbnails.ts
 'use client';
 
-// import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js';
-import 'pdfjs-dist/legacy/build/pdf.worker.entry';
+// import * as pdfjsLib from 'pdfjs-dist';
+import 'pdfjs-dist/build/pdf.worker.mjs';
 
 // target size for grid tiles
 const THUMB_W = 480;
@@ -74,11 +74,11 @@ export async function thumbFromPdf(file: File): Promise<string> {
     console.log('Starting PDF thumbnail generation...');
     
     // Dynamically import PDF.js
-    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
+    const pdfjsLib = await import('pdfjs-dist');
     console.log('PDF.js loaded successfully');
     
     // Set worker source
-    pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = '//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js';
     
     const buf = await file.arrayBuffer();
     console.log('File converted to ArrayBuffer, size:', buf.byteLength);

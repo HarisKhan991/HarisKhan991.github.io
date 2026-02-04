@@ -16,10 +16,12 @@ import {
 } from "lucide-react"
 
 // Import PDF.js
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js'
+import * as pdfjsLib from 'pdfjs-dist'
 
 // Set the worker source for PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js`
+}
 
 interface FilePreviewProps {
   file: {
