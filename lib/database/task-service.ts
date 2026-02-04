@@ -37,7 +37,13 @@ export class TaskService {
       return await this.prisma.task.findMany({
         where: { userId: userId },
         include: {
-          subject: true
+          subject: {
+            select: {
+              id: true,
+              name: true,
+              color: true
+            }
+          }
         },
         orderBy: { createdAt: 'desc' }
       })

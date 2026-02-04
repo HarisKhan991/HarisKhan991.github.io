@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -31,7 +31,25 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
   const [isSearching, setIsSearching] = useState(false)
   const router = useRouter()
 
-  const performSearch = async (query: string) => {
+  const calculateRelevance = useCallback((query: string, searchFields: string[]): number => {
+    const queryLower = query.toLowerCase()
+    let relevance = 0
+
+    searchFields.forEach((field) => {
+      if (!field || typeof field !== "string") return
+
+      const fieldLower = field.toLowerCase()
+      if (fieldLower === queryLower)
+        relevance += 10 // Exact match
+      else if (fieldLower.startsWith(queryLower))
+        relevance += 5 // Starts with query
+      else if (fieldLower.includes(queryLower)) relevance += 2 // Contains query
+    })
+
+    return relevance
+  }, [])
+
+  const performSearch = useCallback(async (query: string) => {
     if (!query.trim()) {
       setSearchResults([])
       return
@@ -229,25 +247,7 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
     }
 
     setIsSearching(false)
-  }
-
-  const calculateRelevance = (query: string, searchFields: string[]): number => {
-    const queryLower = query.toLowerCase()
-    let relevance = 0
-
-    searchFields.forEach((field) => {
-      if (!field || typeof field !== "string") return
-
-      const fieldLower = field.toLowerCase()
-      if (fieldLower === queryLower)
-        relevance += 10 // Exact match
-      else if (fieldLower.startsWith(queryLower))
-        relevance += 5 // Starts with query
-      else if (fieldLower.includes(queryLower)) relevance += 2 // Contains query
-    })
-
-    return relevance
-  }
+  }, [calculateRelevance])
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -334,7 +334,7 @@ export function GlobalSearch({ trigger }: GlobalSearchProps) {
     }, 300)
 
     return () => clearTimeout(delayedSearch)
-  }, [searchQuery])
+  }, [searchQuery, performSearch])
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
