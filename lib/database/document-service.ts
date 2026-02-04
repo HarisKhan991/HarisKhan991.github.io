@@ -90,12 +90,12 @@ export class DocumentService {
       // Save file to disk
       await writeFile(filePath, file.buffer)
 
-      // Get the next order number
-      const lastDocument = await (prisma as any).document.findFirst({
+      // Get the next order number using aggregate (more efficient)
+      const maxOrderResult = await (prisma as any).document.aggregate({
         where: { userId },
-        orderBy: { order: 'desc' }
+        _max: { order: true }
       })
-      const nextOrder = (lastDocument?.order ?? -1) + 1
+      const nextOrder = (maxOrderResult._max.order ?? -1) + 1
 
       // Create document record
       const document = await (prisma as any).document.create({

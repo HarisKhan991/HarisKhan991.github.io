@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ interface PostCardProps {
     currentUserId?: string;
 }
 
-export function PostCard({ post, currentUserId }: PostCardProps) {
+function PostCardComponent({ post, currentUserId }: PostCardProps) {
     const [liked, setLiked] = useState(post.likes && post.likes.length > 0);
     const [likeCount, setLikeCount] = useState(post._count.likes);
     const [commentsOpen, setCommentsOpen] = useState(false);
@@ -28,6 +28,12 @@ export function PostCard({ post, currentUserId }: PostCardProps) {
     const [isViewerOpen, setIsViewerOpen] = useState(false);
     const [commentCount, setCommentCount] = useState(post._count.comments);
 
+    // Cleanup on unmount
+    useEffect(() => {
+        const abortController = new AbortController();
+        return () => abortController.abort();
+    }, []);
+
     // Sync state with props when they change (real-time updates from FeedView)
     useEffect(() => {
         setLiked(post.likes && post.likes.length > 0);
@@ -35,7 +41,7 @@ export function PostCard({ post, currentUserId }: PostCardProps) {
         setCommentCount(post._count.comments);
     }, [post.likes, post._count.likes, post._count.comments]);
 
-    const toggleLike = async () => {
+    const toggleLike = useCallback(async () => {
         // Optimistic update
         const newLiked = !liked;
         setLiked(newLiked);
@@ -48,9 +54,9 @@ export function PostCard({ post, currentUserId }: PostCardProps) {
             setLiked(!newLiked);
             setLikeCount(likeCount);
         }
-    };
+    }, [liked, likeCount, post.id]);
 
-    const loadComments = async () => {
+    const loadComments = useCallback(async () => {
         if (commentsOpen) {
             setCommentsOpen(false);
             return;
@@ -67,9 +73,9 @@ export function PostCard({ post, currentUserId }: PostCardProps) {
         } catch (e) { } finally {
             setLoadingComments(false);
         }
-    };
+    }, [commentsOpen, comments.length, post.id]);
 
-    const submitComment = async (e: React.FormEvent) => {
+    const submitComment = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
         if (!commentText.trim()) return;
 
@@ -86,7 +92,7 @@ export function PostCard({ post, currentUserId }: PostCardProps) {
                 setCommentText("");
             }
         } catch (e) { }
-    };
+    }, [commentText, comments, post.id]);
 
     const mediaAttachments = post.attachments?.filter((att: any) => att.type === "image") || [];
     const fileAttachments = post.attachments?.filter((att: any) => att.type !== "image") || [];
@@ -292,3 +298,5 @@ export function PostCard({ post, currentUserId }: PostCardProps) {
         </Card>
     );
 }
+
+export const PostCard = memo(PostCardComponent);

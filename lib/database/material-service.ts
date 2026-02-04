@@ -143,25 +143,32 @@ export class MaterialService {
   // Toggle material completion
   async toggleMaterialCompletion(materialId: string): Promise<Material> {
     try {
+      // Use a single query with select to fetch only needed fields, then update
       const material = await this.prisma.material.findUnique({
-        where: { id: materialId }
+        where: { id: materialId },
+        select: { id: true, isCompleted: true, chapterId: true }
       })
 
       if (!material) {
         throw new Error('Material not found')
       }
 
-      const updatedMaterial = await this.prisma.material.update({
-        where: { id: materialId },
-        data: {
-          isCompleted: !material.isCompleted
-        }
-      })
+      // Use transaction for atomic updates
+      const updatedMaterial = await this.prisma.$transaction(async (tx) => {
+        const updated = await tx.material.update({
+          where: { id: materialId },
+          data: {
+            isCompleted: !material.isCompleted
+          }
+        })
 
-      // Update chapter completion status based on materials if it belongs to one
-      if (material.chapterId) {
-        await this.updateChapterCompletionFromMaterials(material.chapterId)
-      }
+        // Update chapter completion status if material belongs to a chapter
+        if (material.chapterId) {
+          await this.updateChapterCompletionFromMaterials(material.chapterId)
+        }
+
+        return updated
+      })
 
       return updatedMaterial
     } catch (error) {

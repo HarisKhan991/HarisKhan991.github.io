@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Loader2, MessageSquare, Heart, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { PostCard } from "@/components/feed/post-card";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +16,9 @@ interface ProfilePostGridProps {
 export function ProfilePostGrid({ userId, currentUserId }: ProfilePostGridProps) {
     const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [hasMore, setHasMore] = useState(true);
+    const [page, setPage] = useState(1);
+    const POSTS_PER_PAGE = 12;
 
     useEffect(() => {
         fetchPosts();
@@ -21,9 +26,28 @@ export function ProfilePostGrid({ userId, currentUserId }: ProfilePostGridProps)
 
     const fetchPosts = async () => {
         try {
-            const res = await fetch(`/api/posts?userId=${userId}`);
+            const res = await fetch(`/api/posts?userId=${userId}&limit=${POSTS_PER_PAGE}`);
             if (res.ok) {
-                setPosts(await res.json());
+                const data = await res.json();
+                setPosts(data);
+                setHasMore(data.length === POSTS_PER_PAGE);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadMore = async () => {
+        if (!hasMore || loading) return;
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/posts?userId=${userId}&limit=${POSTS_PER_PAGE}&skip=${posts.length}`);
+            if (res.ok) {
+                const newPosts = await res.json();
+                setPosts([...posts, ...newPosts]);
+                setHasMore(newPosts.length === POSTS_PER_PAGE);
             }
         } catch (e) {
             console.error(e);
@@ -44,6 +68,7 @@ export function ProfilePostGrid({ userId, currentUserId }: ProfilePostGridProps)
     }
 
     return (
+        <>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {posts.map((post) => {
                 const hasMedia = post.attachments && post.attachments.length > 0;
@@ -54,10 +79,13 @@ export function ProfilePostGrid({ userId, currentUserId }: ProfilePostGridProps)
                         <DialogTrigger asChild>
                             <div className="aspect-square relative cursor-pointer group bg-slate-100 overflow-hidden rounded-md border">
                                 {hasMedia ? (
-                                    <img
+                                    <Image
                                         src={firstMedia.url}
                                         alt="Post content"
-                                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                                        fill
+                                        sizes="(max-width: 640px) 100vw, 50vw"
+                                        className="object-cover transition-transform group-hover:scale-105"
+                                        priority={false}
                                     />
                                 ) : (
                                     <div className="w-full h-full p-4 flex items-center justify-center bg-white text-xs md:text-sm text-center text-muted-foreground select-none">
@@ -87,5 +115,18 @@ export function ProfilePostGrid({ userId, currentUserId }: ProfilePostGridProps)
                 );
             })}
         </div>
+        {hasMore && (
+            <div className="flex justify-center mt-6">
+                <Button 
+                    onClick={loadMore} 
+                    disabled={loading}
+                    variant="outline"
+                >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    Load More
+                </Button>
+            </div>
+        )}
+        </>
     );
 }

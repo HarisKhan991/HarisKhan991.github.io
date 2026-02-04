@@ -13,6 +13,8 @@ export async function GET(req: Request) {
         const cursor = searchParams.get("cursor");
         const communityId = searchParams.get("communityId");
         const userId = searchParams.get("userId"); // View specific user's posts
+        const limit = parseInt(searchParams.get("limit") || String(POSTS_BATCH));
+        const skip = parseInt(searchParams.get("skip") || "0");
 
         const isAnnouncement = searchParams.get("isAnnouncement") === "true";
 
@@ -36,78 +38,54 @@ export async function GET(req: Request) {
             whereClause.isAnnouncement = true;
         }
 
+        // DRY: Define select object once
+        const selectFields = {
+            id: true,
+            content: true,
+            isAnnouncement: true,
+            createdAt: true,
+            updatedAt: true,
+            user: {
+                select: { name: true, image: true, id: true }
+            },
+            community: {
+                select: { name: true, id: true }
+            },
+            _count: {
+                select: { comments: true, likes: true }
+            },
+            likes: session ? {
+                where: { userId: (session.user as any).id },
+                select: { userId: true }
+            } : false,
+            attachments: {
+                select: {
+                    id: true,
+                    url: true,
+                    name: true,
+                    type: true,
+                    size: true
+                }
+            }
+        };
+
         let posts;
 
         if (cursor) {
             posts = await prisma.post.findMany({
-                take: POSTS_BATCH,
+                take: limit,
                 skip: 1,
                 cursor: { id: cursor },
                 where: whereClause,
-                select: {
-                    id: true,
-                    content: true,
-                    isAnnouncement: true,
-                    createdAt: true,
-                    updatedAt: true,
-                    user: {
-                        select: { name: true, image: true, id: true }
-                    },
-                    community: {
-                        select: { name: true, id: true }
-                    },
-                    _count: {
-                        select: { comments: true, likes: true }
-                    },
-                    likes: session ? {
-                        where: { userId: (session.user as any).id },
-                        select: { userId: true }
-                    } : false,
-                    attachments: {
-                        select: {
-                            id: true,
-                            url: true,
-                            name: true,
-                            type: true,
-                            size: true
-                        }
-                    }
-                },
+                select: selectFields,
                 orderBy: { createdAt: "desc" }
             });
         } else {
             posts = await prisma.post.findMany({
-                take: POSTS_BATCH,
+                take: limit,
+                skip: skip,
                 where: whereClause,
-                select: {
-                    id: true,
-                    content: true,
-                    isAnnouncement: true,
-                    createdAt: true,
-                    updatedAt: true,
-                    user: {
-                        select: { name: true, image: true, id: true }
-                    },
-                    community: {
-                        select: { name: true, id: true }
-                    },
-                    _count: {
-                        select: { comments: true, likes: true }
-                    },
-                    likes: session ? {
-                        where: { userId: (session.user as any).id },
-                        select: { userId: true }
-                    } : false,
-                    attachments: {
-                        select: {
-                            id: true,
-                            url: true,
-                            name: true,
-                            type: true,
-                            size: true
-                        }
-                    }
-                },
+                select: selectFields,
                 orderBy: { createdAt: "desc" }
             });
         }
