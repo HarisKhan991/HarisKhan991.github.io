@@ -241,6 +241,10 @@ model Task {
   updatedAt     DateTime  @updatedAt @map("updated_at")
   subject       Subject?  @relation(fields: [subjectId], references: [id])
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([userId, dueDate])
+  @@index([subjectId])
 }
 
 model StudySession {
@@ -291,6 +295,10 @@ model TestMark {
   mistakes  String?
   subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([subjectId, userId])
+  @@index([testDate])
 }
 
 model UserSettings {

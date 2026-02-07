@@ -46,19 +46,17 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({ success: true, courseId: newCourse.id, session });
     } catch (error: any) {
-        const fs = require('fs');
-        fs.writeFileSync('d:\\Development_3rd_Feb\\test-create-error.json', JSON.stringify({
+        // SECURITY: Log detailed error server-side only
+        console.error("[TEST_CREATE_ERROR]", {
             message: error.message,
             stack: error.stack,
-            name: error.constructor.name,
-            prismaError: error instanceof Error ? error.constructor.name : typeof error
-        }, null, 2));
-        console.error("Test creation failed:", error);
+            name: error.constructor?.name,
+        });
+        
+        // Return generic error to client (no stack trace leakage)
         return NextResponse.json({
             success: false,
-            error: error.message,
-            stack: error.stack,
-            prismaError: error instanceof Error ? error.constructor.name : typeof error
+            error: 'Failed to create test course'
         }, { status: 500 });
     }
 }

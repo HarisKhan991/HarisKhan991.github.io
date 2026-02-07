@@ -220,6 +220,12 @@ export const authOptions: NextAuthOptions = {
   jwt: {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development-only-change-in-production',
+  secret: process.env.NEXTAUTH_SECRET || (() => {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('NEXTAUTH_SECRET must be set in production environment');
+    }
+    // Only use fallback in development
+    return 'dev-secret-' + Date.now();
+  })(),
   debug: process.env.NODE_ENV === 'development',
 }

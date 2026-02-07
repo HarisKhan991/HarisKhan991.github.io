@@ -11,6 +11,52 @@ import {
 } from '@/lib/drive/storage';
 
 /**
+ * Validate URL to prevent SSRF attacks
+ */
+function isUrlSafe(urlString: string): boolean {
+    try {
+        const url = new URL(urlString);
+        
+        // Only allow HTTP and HTTPS protocols
+        if (!['http:', 'https:'].includes(url.protocol)) {
+            return false;
+        }
+        
+        // Block private IP ranges
+        const hostname = url.hostname.toLowerCase();
+        
+        // Block localhost
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+            return false;
+        }
+        
+        // Block private IP ranges
+        if (
+            hostname.startsWith('10.') ||
+            hostname.startsWith('192.168.') ||
+            hostname.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./)
+        ) {
+            return false;
+        }
+        
+        // Block cloud metadata endpoints
+        const blockedHosts = [
+            '169.254.169.254', // AWS, Azure, GCP metadata
+            'metadata.google.internal',
+            '169.254.170.2', // AWS ECS metadata
+        ];
+        
+        if (blockedHosts.some(blocked => hostname.includes(blocked))) {
+            return false;
+        }
+        
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+/**
  * POST /api/drive/save-from-url
  * Save a file from a URL to Drive
  */
@@ -27,6 +73,14 @@ export async function POST(request: NextRequest) {
 
         if (!url) {
             return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+        }
+        
+        // SECURITY: Validate URL to prevent SSRF
+        if (!isUrlSafe(url)) {
+            return NextResponse.json(
+                { error: 'Invalid or unsafe URL' },
+                { status: 400 }
+            );
         }
 
         // Get user's drive
@@ -47,15 +101,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Drive not found' }, { status: 404 });
         }
 
-        // Fetch the file
-        // Handle both absolute URLs and relative URLs (from same server)
-        let fetchUrl = url;
-        if (url.startsWith('/')) {
-            const origin = request.headers.get('origin') || 'http://localhost:3000';
-            fetchUrl = `${origin}${url}`;
-        }
-
-        const response = await fetch(fetchUrl);
+        // Fetch the file (URL already validated for SSRF)
+        const response = await fetch(url, {
+            // Add timeout to prevent hanging requests
+            signal: AbortSignal.timeout(30000), // 30 second timeout
+        });
         if (!response.ok) {
             return NextResponse.json(
                 { error: 'Failed to fetch file from URL' },
@@ -66,6 +116,15 @@ export async function POST(request: NextRequest) {
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         const fileSize = buffer.length;
+        
+        // SECURITY: Limit file size to prevent DoS (100MB max)
+        const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+        if (fileSize > MAX_FILE_SIZE) {
+            return NextResponse.json(
+                { error: 'File too large (max 100MB)' },
+                { status: 400 }
+            );
+        }
 
         // Check storage limit
         if (isStorageLimitExceeded(drive.storageUsed, drive.storageLimit, fileSize)) {
@@ -105,8 +164,8 @@ export async function POST(request: NextRequest) {
                     filename = match[1];
                 }
             } else {
-                // Try to get from URL
-                const urlPath = new URL(fetchUrl).pathname;
+                // Try to get from URL (use validated URL, not fetchUrl)
+                const urlPath = new URL(url).pathname;
                 const basename = path.basename(urlPath);
                 if (basename && basename.includes('.')) {
                     filename = basename;
