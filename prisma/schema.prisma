@@ -1,5 +1,5 @@
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -105,6 +105,10 @@ model User {
   driveActivities       DriveActivity[]
   sentCopyRequests      CopyRequest[] @relation("SentCopyRequests")
   receivedCopyRequests  CopyRequest[] @relation("ReceivedCopyRequests")
+  
+  // Assignment Relations
+  createdAssignments    Assignment[]           @relation("AssignmentCreator")
+  submissions           AssignmentSubmission[] @relation("StudentSubmissions")
 }
 
 model UserProfile {
@@ -328,7 +332,7 @@ model Material {
   subjectId   String?  @map("subject_id")
   title       String
   type        String
-  content     String?  @db.Text
+  content     String?  
   fileUrl     String?  @map("file_url")
   fileSize    Int?
   duration    Int?
@@ -442,24 +446,28 @@ model Community {
   coverImage   String?  @map("cover_image")
   isPrivate    Boolean  @default(false) @map("is_private")
   showInSearch Boolean  @default(true) @map("show_in_search")
+  isClass      Boolean  @default(false) @map("is_class") // Marks if this community is a class
+  inviteCode   String?  @unique @map("invite_code") // For join-by-link functionality
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
   rules        String?
 
-  owner    User              @relation("CommunityOwner", fields: [ownerId], references: [id])
-  members  CommunityMember[]
-  channels Channel[]
-  posts    Post[]
-  events   CommunityEvent[]
+  owner       User              @relation("CommunityOwner", fields: [ownerId], references: [id])
+  members     CommunityMember[]
+  channels    Channel[]
+  posts       Post[]
+  events      CommunityEvent[]
+  assignments Assignment[]
 
   @@index([ownerId])
+  @@index([inviteCode])
 }
 
 model CommunityMember {
   id          String   @id @default(cuid())
   communityId String   @map("community_id")
   userId      String   @map("user_id")
-  role        String   @default("member") // member, moderator, admin
+  role        String   @default("member") // member, moderator, admin, teacher
   joinedAt    DateTime @default(now()) @map("joined_at")
 
   community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
@@ -727,4 +735,52 @@ model CopyRequest {
   @@index([toUserId])
   @@index([status])
   @@map("copy_requests")
+}
+
+// Classes/Assignment Models
+
+model Assignment {
+  id              String              @id @default(cuid())
+  communityId     String              @map("community_id")
+  creatorId       String              @map("creator_id")
+  title           String
+  description     String?             
+  dueDate         DateTime?           @map("due_date")
+  points          Int?                // Total points for grading
+  attachments     String              @default("[]") // JSON array of file URLs
+  isPublished     Boolean             @default(false) @map("is_published")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  community       Community           @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  creator         User                @relation("AssignmentCreator", fields: [creatorId], references: [id])
+  submissions     AssignmentSubmission[]
+
+  @@index([communityId])
+  @@index([creatorId])
+  @@map("assignments")
+}
+
+model AssignmentSubmission {
+  id              String    @id @default(cuid())
+  assignmentId    String    @map("assignment_id")
+  studentId       String    @map("student_id")
+  content         String?   
+  attachments     String    @default("[]") // JSON array of file URLs
+  status          String    @default("DRAFT") // "DRAFT", "SUBMITTED", "GRADED", "RETURNED"
+  grade           Float?    // Score received
+  feedback        String?   
+  submittedAt     DateTime? @map("submitted_at")
+  gradedAt        DateTime? @map("graded_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  assignment      Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student         User       @relation("StudentSubmissions", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, studentId])
+  @@index([assignmentId])
+  @@index([studentId])
+  @@index([status])
+  @@map("assignment_submissions")
 }
