@@ -79,6 +79,8 @@ export async function POST(req: Request) {
         }
 
         // Generate unique invite code
+        // Using 10 characters for a good balance of uniqueness and ease of sharing
+        // With nanoid's default alphabet (A-Za-z0-9_-), 10 chars provides ~2.8 quadrillion combinations
         const inviteCode = nanoid(10);
 
         const classRoom = await prisma.community.create({

@@ -133,6 +133,8 @@ export async function POST(
         }
 
         // Upsert submission
+        // Note: Storing attachments as JSON string for simplicity
+        // Consider migrating to a separate Attachment table for production use
         const submission = await prisma.assignmentSubmission.upsert({
             where: {
                 assignmentId_studentId: {

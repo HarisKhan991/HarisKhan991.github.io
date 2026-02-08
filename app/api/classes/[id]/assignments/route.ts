@@ -133,6 +133,8 @@ export async function POST(
                 description,
                 dueDate: dueDate ? new Date(dueDate) : null,
                 points,
+                // Note: Storing attachments as JSON string for simplicity
+                // Consider migrating to a separate Attachment table for production use
                 attachments: JSON.stringify(attachments || []),
                 isPublished: isPublished || false
             },
