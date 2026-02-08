@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar'
 import { TimePicker } from '@/components/ui/time-picker'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Clock, BookOpen, Target, TrendingUp, TrendingDown, Plus, ArrowRight, CheckCircle, CheckCircle2, Circle, AlertTriangle, Award, Users, FileText, BarChart3, Flag, Search, Bell, Settings, LogOut, ChevronDown, X, User, CalendarIcon, Timer, CheckSquare, Square, Zap, Download, Globe, HardDrive } from 'lucide-react'
+import { Clock, BookOpen, Target, TrendingUp, TrendingDown, Plus, ArrowRight, CheckCircle, CheckCircle2, Circle, AlertTriangle, Award, Users, FileText, BarChart3, Flag, Search, Bell, Settings, LogOut, ChevronDown, X, User, CalendarIcon, Timer, CheckSquare, Square, Zap, Download, Globe, HardDrive, GraduationCap } from 'lucide-react'
 import { useSubjects, useTasks, useStudySessions, useTestMarks } from '@/hooks'
 import { useUserSettings } from '@/hooks/useUserSettings'
 
@@ -1359,41 +1359,53 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Actions - Minimal - Mobile Optimized */}
-          <div className="grid grid-cols-4 gap-3 sm:gap-4">
-            <Button
-              variant="outline"
-              className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 p-2 sm:p-3"
-              onClick={() => setShowCreateTask(true)}
-            >
-              <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-xs sm:text-sm">Quick Task</span>
-            </Button>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-4 gap-3 sm:gap-4">
+              <Button
+                variant="outline"
+                className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 p-2 sm:p-3"
+                onClick={() => setShowCreateTask(true)}
+              >
+                <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm">Quick Task</span>
+              </Button>
 
-            <Button
-              variant="outline"
-              className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 p-2 sm:p-3"
-              onClick={() => router.push('/subjects')}
-            >
-              <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-xs sm:text-sm">Subjects</span>
-            </Button>
+              <Button
+                variant="outline"
+                className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 p-2 sm:p-3"
+                onClick={() => router.push('/subjects')}
+              >
+                <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm">Subjects</span>
+              </Button>
 
-            <Button
-              variant="outline"
-              className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 p-2 sm:p-3"
-              onClick={() => router.push('/drive')}
-            >
-              <HardDrive className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-xs sm:text-sm">Drive</span>
-            </Button>
+              <Button
+                variant="outline"
+                className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 p-2 sm:p-3"
+                onClick={() => router.push('/drive')}
+              >
+                <HardDrive className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm">Drive</span>
+              </Button>
 
+              <Button
+                variant="outline"
+                className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 p-2 sm:p-3"
+                onClick={() => router.push('/feed')}
+              >
+                <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm">Social</span>
+              </Button>
+            </div>
+            
             <Button
               variant="outline"
-              className="h-16 sm:h-20 flex-col space-y-1 sm:space-y-2 p-2 sm:p-3"
-              onClick={() => router.push('/feed')}
+              className="w-full h-16 sm:h-20 flex items-center justify-center space-x-3 p-3"
+              onClick={() => router.push('/classes')}
             >
-              <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-xs sm:text-sm">Social</span>
+              <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="text-sm sm:text-base font-medium">Classes</span>
+              <Badge variant="secondary" className="ml-2">New</Badge>
             </Button>
           </div>
 
