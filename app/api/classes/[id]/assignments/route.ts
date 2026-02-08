@@ -54,7 +54,7 @@ export async function GET(
         },
       },
       orderBy: {
-        dueDate: 'desc',
+        dueDate: 'asc',
       },
     })
 
