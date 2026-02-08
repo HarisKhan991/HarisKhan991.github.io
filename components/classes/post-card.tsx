@@ -95,7 +95,7 @@ export function PostCard({
   }
 
   return (
-    <Card className={post.isPinned ? "border-primary" : ""}>
+    <Card className={post.pinned ? "border-primary" : ""}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-3 flex-1">
@@ -112,7 +112,7 @@ export function PostCard({
                   <Icon className="h-3 w-3 mr-1" />
                   {post.type}
                 </Badge>
-                {post.isPinned && (
+                {post.pinned && (
                   <Badge variant="secondary" className="text-xs">
                     <Pin className="h-3 w-3 mr-1" />
                     Pinned
@@ -136,7 +136,7 @@ export function PostCard({
                 {canPin && (
                   <DropdownMenuItem onClick={() => onTogglePin(post.id)}>
                     <Pin className="h-4 w-4 mr-2" />
-                    {post.isPinned ? 'Unpin' : 'Pin'} Post
+                    {post.pinned ? 'Unpin' : 'Pin'} Post
                   </DropdownMenuItem>
                 )}
                 {canDelete && (

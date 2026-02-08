@@ -51,7 +51,7 @@ export interface ClassPost {
   title: string | null
   content: string
   attachments: string[]
-  isPinned: boolean
+  pinned: boolean
   createdAt: Date | string
   updatedAt: Date | string
   author?: User
