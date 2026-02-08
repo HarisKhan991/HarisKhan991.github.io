@@ -10,15 +10,32 @@ import { Bell, Check, X, ExternalLink } from "lucide-react"
 import { notificationManager, type StudyNotification } from "@/lib/notifications"
 import { format } from "date-fns"
 import Link from "next/link"
+import { useSocket } from "@/components/providers/socket-provider"
+import { useSession } from "next-auth/react"
 
 export function NotificationCenter() {
   const [notifications, setNotifications] = useState<StudyNotification[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const { socket, isConnected } = useSocket()
+  const { data: session } = useSession()
+  const userId = (session?.user as any)?.id
 
   useEffect(() => {
     const unsubscribe = notificationManager.subscribe(setNotifications)
     return unsubscribe
   }, [])
+
+  // Connect socket to notification manager for real-time updates
+  useEffect(() => {
+    if (socket && isConnected) {
+      notificationManager.setSocket(socket)
+      
+      // Join user room for notifications
+      if (userId) {
+        socket.emit("join-user-room", userId)
+      }
+    }
+  }, [socket, isConnected, userId])
 
   const unreadCount = notifications.filter(n => !n.read).length
 
@@ -40,6 +57,7 @@ export function NotificationCenter() {
       case "achievement": return "🎉"
       case "deadline": return "⚠️"
       case "goal": return "🎯"
+      case "message": return "💬"
       default: return "📚"
     }
   }
@@ -50,6 +68,7 @@ export function NotificationCenter() {
       case "achievement": return "border-green-200 bg-green-50 dark:bg-green-950/20"
       case "deadline": return "border-red-200 bg-red-50 dark:bg-red-950/20"
       case "goal": return "border-purple-200 bg-purple-50 dark:bg-purple-950/20"
+      case "message": return "border-cyan-200 bg-cyan-50 dark:bg-cyan-950/20"
       default: return "border-gray-200 bg-gray-50 dark:bg-gray-950/20"
     }
   }

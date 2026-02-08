@@ -4,7 +4,7 @@ import { toast } from "react-hot-toast"
 
 export interface StudyNotification {
   id: string
-  type: "reminder" | "achievement" | "deadline" | "goal"
+  type: "reminder" | "achievement" | "deadline" | "goal" | "message"
   title: string
   message: string
   timestamp: Date
@@ -16,6 +16,41 @@ class NotificationManager {
   private subscribers: ((notifications: StudyNotification[]) => void)[] = []
   private notifications: StudyNotification[] = []
   private initialized = false
+  private socket: any = null
+
+  constructor() {
+    if (typeof window !== "undefined") {
+      this.requestPermission()
+    }
+  }
+
+  // Set socket instance for real-time updates
+  setSocket(socket: any) {
+    this.socket = socket
+    if (socket) {
+      socket.on("new-notification", () => {
+        // Refresh notifications when a new notification event is received
+        this.refreshNotifications()
+      })
+    }
+  }
+
+  // Refresh notifications from the server
+  async refreshNotifications() {
+    try {
+      const response = await fetch('/api/notifications')
+      if (response.ok) {
+        const data = await response.json()
+        this.notifications = data.map((n: any) => ({
+          ...n,
+          timestamp: new Date(n.timestamp)
+        }))
+        this.notifySubscribers()
+      }
+    } catch (error) {
+      console.error('Failed to refresh notifications:', error)
+    }
+  }
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -204,6 +239,7 @@ class NotificationManager {
       case "achievement": return "🎉"
       case "deadline": return "⚠️"
       case "goal": return "🎯"
+      case "message": return "💬"
       default: return "📚"
     }
   }
