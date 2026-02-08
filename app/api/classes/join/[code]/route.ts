@@ -55,7 +55,7 @@ export async function GET(
       )
     }
 
-    // Check if user is archived
+    // Check if class is archived
     if (classData.archived) {
       return NextResponse.json(
         { error: 'This class has been archived' },
