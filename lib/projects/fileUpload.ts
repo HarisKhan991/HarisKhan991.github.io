@@ -3,7 +3,8 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import sharp from 'sharp';
 
-const UPLOAD_DIR = '/var/www/studyhi/public/uploads/projects/';
+// Configure upload directory - use environment variable or default
+const UPLOAD_DIR = process.env.PROJECTS_UPLOAD_DIR || path.join(process.cwd(), 'public/uploads/projects/');
 const MAX_VIDEO_SIZE = 256 * 1024 * 1024; // 256MB
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -36,28 +37,37 @@ export const fileUpload = {
       throw new Error(`Image size exceeds maximum of ${MAX_IMAGE_SIZE / 1024 / 1024}MB`);
     }
 
-    // Process and save image
-    await sharp(file)
+    // Process and save image - preserve format for transparency
+    const image = sharp(file);
+    const metadata = await image.metadata();
+    
+    // Determine output format
+    const hasAlpha = metadata.hasAlpha;
+    const outputFormat = hasAlpha ? 'png' : 'jpeg';
+    const outputFileName = `${uuidv4()}.${outputFormat}`;
+    const outputPath = path.join(UPLOAD_DIR, outputFileName);
+
+    await image
       .resize(1920, 1080, {
         fit: 'inside',
         withoutEnlargement: true,
       })
-      .jpeg({ quality: 85 })
-      .toFile(filePath);
+      [outputFormat]({ quality: 85 })
+      .toFile(outputPath);
 
     // Create thumbnail
-    const thumbnailName = `${uuidv4()}_thumb${ext}`;
+    const thumbnailName = `${uuidv4()}_thumb.${outputFormat}`;
     const thumbnailPath = path.join(UPLOAD_DIR, thumbnailName);
 
     await sharp(file)
       .resize(300, 225, {
         fit: 'cover',
       })
-      .jpeg({ quality: 80 })
+      [outputFormat]({ quality: 80 })
       .toFile(thumbnailPath);
 
     return {
-      url: `/uploads/projects/${fileName}`,
+      url: `/uploads/projects/${outputFileName}`,
       thumbnail: `/uploads/projects/${thumbnailName}`,
     };
   },

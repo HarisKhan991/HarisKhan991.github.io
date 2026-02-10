@@ -1,6 +1,10 @@
 import * as yup from 'yup';
 import { Project, ProjectSection, SocialLink, MediaItem } from '@/types/projects';
 
+// Constants for validation
+const MAX_VIDEO_SIZE = 256 * 1024 * 1024; // 256MB
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+
 // Social link validation schema
 const socialLinkSchema = yup.object().shape({
   platform: yup.string().required('Platform is required'),
@@ -154,7 +158,7 @@ export const projectValidation = {
   /**
    * Validate file size (in bytes)
    */
-  validateFileSize(size: number, maxSize: number = 256 * 1024 * 1024): boolean {
+  validateFileSize(size: number, maxSize: number = MAX_VIDEO_SIZE): boolean {
     return size > 0 && size <= maxSize;
   },
 
@@ -170,6 +174,8 @@ export const projectValidation = {
 
   /**
    * Sanitize content to prevent XSS
+   * NOTE: This is basic sanitization. For production, consider using 
+   * a dedicated library like DOMPurify or isomorphic-dompurify
    */
   sanitizeContent(content: string): string {
     // Basic XSS prevention - strip script tags and dangerous attributes

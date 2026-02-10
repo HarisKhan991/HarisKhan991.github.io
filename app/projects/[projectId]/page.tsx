@@ -209,6 +209,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
                             <iframe
                               src={media.url}
                               className="absolute top-0 left-0 w-full h-full rounded"
+                              sandbox="allow-scripts allow-same-origin allow-presentation"
                               allowFullScreen
                             />
                           </div>

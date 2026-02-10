@@ -174,22 +174,29 @@ export const projectService = {
       where.authorId = authorId;
     }
 
+    // Build OR conditions for tags and query
+    const orConditions = [];
+    
     // Filter by tags
     if (tags && tags.length > 0) {
-      // JSON search is complex in Prisma, we'll do a simple contains check
-      where.OR = tags.map((tag) => ({
+      orConditions.push(...tags.map((tag) => ({
         tags: {
           contains: tag,
         },
-      }));
+      })));
     }
 
     // Full-text search
     if (query) {
-      where.OR = [
+      orConditions.push(
         { name: { contains: query } },
-        { description: { contains: query } },
-      ];
+        { description: { contains: query } }
+      );
+    }
+
+    // Add OR conditions to where clause if any exist
+    if (orConditions.length > 0) {
+      where.OR = orConditions;
     }
 
     // Sorting
