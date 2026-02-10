@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar'
 import { TimePicker } from '@/components/ui/time-picker'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Clock, BookOpen, Target, TrendingUp, TrendingDown, Plus, ArrowRight, CheckCircle, CheckCircle2, Circle, AlertTriangle, Award, Users, FileText, BarChart3, Flag, Search, Bell, Settings, LogOut, ChevronDown, X, User, CalendarIcon, Timer, CheckSquare, Square, Zap, Download, Globe, HardDrive } from 'lucide-react'
+import { Clock, BookOpen, Target, TrendingUp, TrendingDown, Plus, ArrowRight, CheckCircle, CheckCircle2, Circle, AlertTriangle, Award, Users, FileText, BarChart3, Flag, Search, Bell, Settings, LogOut, ChevronDown, X, User, CalendarIcon, Timer, CheckSquare, Square, Zap, Download, Globe, HardDrive, Lightbulb } from 'lucide-react'
 import { useSubjects, useTasks, useStudySessions, useTestMarks } from '@/hooks'
 import { useUserSettings } from '@/hooks/useUserSettings'
 
@@ -1473,6 +1473,24 @@ export default function DashboardPage() {
                     </div>
                     <div className="mt-2 text-xs text-muted-foreground">
                       {testMarks.length} tests recorded
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Projects */}
+                <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/projects')}>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-center space-x-3 sm:space-x-4">
+                      <div className="p-2 sm:p-3 bg-indigo-100 dark:bg-indigo-900/20 rounded-lg">
+                        <Lightbulb className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm sm:text-base font-semibold text-foreground">Projects</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Showcase your work</p>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      Create and share projects
                     </div>
                   </CardContent>
                 </Card>
